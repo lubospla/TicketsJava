@@ -2,13 +2,16 @@ package com.example.tickets.controller;
 
 import com.example.tickets.controller.dto.TicketDTO;
 import com.example.tickets.model.Ticket;
+import com.example.tickets.model.TicketStatus;
 import com.example.tickets.repository.TicketsRepository;
 import lombok.AllArgsConstructor;
+import org.json.JSONObject;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,9 +24,9 @@ public class TicketsControllerV1 {
 
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public Ticket addTicket(@RequestBody TicketDTO ticketDTO) {
+    public Ticket addTicket(@Valid @RequestBody TicketDTO ticketDTO) {
         Ticket ticket = new ModelMapper().map(ticketDTO, Ticket.class);
-        ticket.setDateTime(LocalDateTime.now());    // TODO just date or datetime?
+        ticket.setDateTime(LocalDateTime.now());
         return ticketsRepository.save(ticket);
     }
 
@@ -32,9 +35,16 @@ public class TicketsControllerV1 {
         return ticketsRepository.findAll();
     }
 
+    @GetMapping(path = "/statuses", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public String getTicketStatuses() {
+        JSONObject json = new JSONObject();
+        json.put("statuses", TicketStatus.values());
+        return json.toString();
+    }
+
     @PutMapping(path = "/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Ticket> updateTicket(@RequestBody TicketDTO ticketDTO,
-                                              @PathVariable String id) {
+    public ResponseEntity<Ticket> updateTicket(@Valid @RequestBody TicketDTO ticketDTO,
+                                               @PathVariable String id) {
         return ticketsRepository.findById(id)
                 .map(ticket -> {
                     ticket.setTitle(ticketDTO.getTitle());
